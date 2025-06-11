@@ -15,4 +15,5 @@ public class UserDTO {
     private String profileAvatar;
     private User.UserType userType;
     private User.Role role;
+    private String token;
 }

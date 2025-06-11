@@ -24,6 +24,9 @@ public class AuthService {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
+    private JwtService jwtService;
+
+    @Autowired
     private AuthenticationManager authenticationManager;
 
     public UserDTO register(User user) throws UserAlreadyExistsException {
@@ -43,13 +46,16 @@ public class AuthService {
         log.info("User object before saving: {}", user);
         User savedUser = userRepository.save(user);
 
+        String token = jwtService.generateToken(savedUser.getEmail());
+
         return new UserDTO(
                 savedUser.getId(),
                 savedUser.getFullName(),
                 savedUser.getEmail(),
                 savedUser.getProfileAvatar(),
                 savedUser.getType(),
-                savedUser.getRole()
+                savedUser.getRole(),
+                token
         );
     }
 
@@ -58,6 +64,11 @@ public class AuthService {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(email, password)
             );
+
+            String token = null;
+            if (authentication.isAuthenticated()) {
+                token = jwtService.generateToken(email);
+            }
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
@@ -69,7 +80,8 @@ public class AuthService {
                     foundUser.getEmail(),
                     foundUser.getProfileAvatar(),
                     foundUser.getType(),
-                    foundUser.getRole()
+                    foundUser.getRole(),
+                    token
             );
         } catch(Exception e) {
             throw new Exception("Invalid email or password");

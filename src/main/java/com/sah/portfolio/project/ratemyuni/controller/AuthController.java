@@ -4,10 +4,12 @@ package com.sah.portfolio.project.ratemyuni.controller;
 import com.sah.portfolio.project.ratemyuni.dto.UserDTO;
 import com.sah.portfolio.project.ratemyuni.model.User;
 import com.sah.portfolio.project.ratemyuni.service.AuthService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.naming.java.javaURLContextFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -104,4 +106,23 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Authentication failed: " + e.getMessage());
         }
     }
+
+    @RequestMapping(value = "/logout", method = RequestMethod.POST)
+    public ResponseEntity<?> logoutUser() {
+        try {
+            // Clearing the security context
+            SecurityContextHolder.clearContext();
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Logged out successfully");
+            return ResponseEntity.ok().body(response);
+        } catch (Exception e) {
+            Map<String, Object> errResponse = new HashMap<>();
+            errResponse.put("success", false);
+            errResponse.put("message", e.getMessage());
+            return ResponseEntity.internalServerError().body(errResponse);
+        }
+    }
+
 }
