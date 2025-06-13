@@ -7,7 +7,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.security.core.userdetails.UserDetails;
+
+import java.util.List;
 
 
 @Document(collection = "users")
@@ -43,5 +44,6 @@ public class User {
         user, admin
     }
 
+    private List<Review> reviews;
 
 }
