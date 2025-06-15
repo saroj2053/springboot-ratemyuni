@@ -44,8 +44,7 @@ public class UniversityService {
 
     }
 
-    public boolean deleteUniversity(String universityId) {
+    public void deleteUniversity(String universityId) {
         universityRepository.deleteById(universityId);
-        return true;
     }
 }

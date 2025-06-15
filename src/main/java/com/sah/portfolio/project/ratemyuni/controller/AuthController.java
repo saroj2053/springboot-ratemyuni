@@ -4,17 +4,15 @@ package com.sah.portfolio.project.ratemyuni.controller;
 import com.sah.portfolio.project.ratemyuni.dto.UserDTO;
 import com.sah.portfolio.project.ratemyuni.model.User;
 import com.sah.portfolio.project.ratemyuni.service.AuthService;
+import com.sah.portfolio.project.ratemyuni.utils.ResponseGenerator;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.naming.java.javaURLContextFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,6 +20,7 @@ import java.util.Map;
 @Slf4j
 @RestController
 @RequestMapping("/api/auth")
+@CrossOrigin()
 public class AuthController {
 
     @Autowired
@@ -82,28 +81,36 @@ public class AuthController {
         log.info("User object for login: {}", email + ", " + password);
         try {
             if(email == null) {
-                return ResponseEntity.badRequest().body("Email is required");
+                return ResponseGenerator.response(false, "Email is required", 400);
             }
+
             if(password == null) {
-                return ResponseEntity.badRequest().body("Password is required");
+                return ResponseGenerator.response(false, "Password is required", 400);
             }
 
             if(!email.contains("@")) {
-                return ResponseEntity.badRequest().body("Please enter a valid email address");
+                return ResponseGenerator.response(false, "Please enter a valid email address", 400);
             }
 
             if(password.length() < 6) {
-                return ResponseEntity.badRequest().body("Password must be at least 6 characters");
+                return ResponseGenerator.response(false, "Password must be at least 6 characters", 400);
             }
 
             UserDTO userDTO = authService.login(email, password);
+
+            Cookie cookie = new Cookie("token", userDTO.getToken());
+            cookie.setHttpOnly(true);
+            cookie.setSecure(true);
+            cookie.setPath("/");
+            cookie.setMaxAge(7 * 24 * 60 * 60); // for 7 days
+
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "User logged in successfully");
             response.put("user", userDTO);
             return ResponseEntity.ok().body(response);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Authentication failed: " + e.getMessage());
+            return ResponseGenerator.response(false, e.getMessage(), 400);
         }
     }
 

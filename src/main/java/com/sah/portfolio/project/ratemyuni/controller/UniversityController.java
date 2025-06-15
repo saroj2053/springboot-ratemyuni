@@ -43,10 +43,19 @@ public class UniversityController {
     }
 
     @PostMapping("/addUniversity")
-    public ResponseEntity<?> addUniversity(@RequestPart("university") University university, @RequestPart(value="file", required=false) MultipartFile file ) {
+    public ResponseEntity<?> addUniversity(@RequestPart("university") University university,
+                                           @RequestPart(value="file", required=false) MultipartFile file ) {
         try {
 
-            if (university.getName().isEmpty() || university.getDescription().isEmpty() || university.getLocation().isEmpty() || university.getEstablishedYear().isEmpty() || university.getType().describeConstable().isEmpty() || university.getWebsiteUrl().isEmpty()) {
+            if (university.getName().isEmpty() ||
+                    university.getDescription().isEmpty() ||
+                    university.getLocation().isEmpty() ||
+                    university.getEstablishedYear().isEmpty() ||
+                    university.getType().describeConstable().isEmpty() ||
+                    university.getWebsiteUrl().isEmpty() ||
+                    university.getPrograms() == null ||
+                    university.getFacilities() == null)
+            {
                 return ResponseGenerator.response(false, "Please enter values in all fields", 400);
             }
 
@@ -97,7 +106,14 @@ public class UniversityController {
                 return ResponseGenerator.response(false, "Invalid University Id", 400);
             }
 
-            if (university.getName().isEmpty() || university.getDescription().isEmpty() || university.getLocation().isEmpty() || university.getEstablishedYear().isEmpty() || university.getType().describeConstable().isEmpty() || university.getWebsiteUrl().isEmpty()) {
+            if (university.getName().isEmpty() ||
+                    university.getDescription().isEmpty() ||
+                    university.getLocation().isEmpty() ||
+                    university.getEstablishedYear().isEmpty() ||
+                    university.getType().describeConstable().isEmpty() ||
+                    university.getWebsiteUrl().isEmpty() ||
+                    university.getPrograms() == null ||
+                    university.getFacilities() == null) {
                 return ResponseGenerator.response(false, "Please enter values in all fields", 400);
             }
 
