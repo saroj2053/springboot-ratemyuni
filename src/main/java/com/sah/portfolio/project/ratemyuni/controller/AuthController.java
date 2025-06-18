@@ -4,6 +4,7 @@ package com.sah.portfolio.project.ratemyuni.controller;
 import com.sah.portfolio.project.ratemyuni.dto.UserDTO;
 import com.sah.portfolio.project.ratemyuni.model.User;
 import com.sah.portfolio.project.ratemyuni.service.AuthService;
+import com.sah.portfolio.project.ratemyuni.service.JwtService;
 import com.sah.portfolio.project.ratemyuni.utils.ResponseGenerator;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -20,16 +21,15 @@ import java.util.Map;
 @Slf4j
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin()
 public class AuthController {
 
     @Autowired
     private AuthService authService;
+    @Autowired
+    private JwtService jwtService;
 
     @RequestMapping(value = "/register", method = RequestMethod.POST)
     public ResponseEntity<?> registerUser(@RequestBody User user) {
-        log.info("User object for registration: {}", user);
-
         try {
             if (user.getFullName() == null) {
                 return ResponseEntity.badRequest().body("Full Name is required");
@@ -73,7 +73,7 @@ public class AuthController {
     }
 
     @RequestMapping(value = "/login", method = RequestMethod.POST)
-    public ResponseEntity<?> loginUser(@RequestBody Map<String, String> requestBody) {
+    public ResponseEntity<?> loginUser(@RequestBody Map<String, String> requestBody, HttpServletResponse httpServletResponse) {
 
         String email = requestBody.get("email");
         String password = requestBody.get("password");
@@ -98,11 +98,15 @@ public class AuthController {
 
             UserDTO userDTO = authService.login(email, password);
 
+            System.out.println("Generated Token from login: " + userDTO.getToken());
+
             Cookie cookie = new Cookie("token", userDTO.getToken());
             cookie.setHttpOnly(true);
             cookie.setSecure(true);
             cookie.setPath("/");
             cookie.setMaxAge(7 * 24 * 60 * 60); // for 7 days
+
+            httpServletResponse.addCookie(cookie);
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
@@ -114,11 +118,56 @@ public class AuthController {
         }
     }
 
+    @GetMapping("/loggedUser/profile")
+    public ResponseEntity<?> getLoggedUser(@CookieValue(value="token", required=false) String token) {
+        try {
+            if (token == null || token.isEmpty()) {
+                return ResponseGenerator.response(false, "No token found. Please login.", 401);
+            }
+
+            String email = jwtService.extractUserName(token);
+            if(email == null || !jwtService.validateToken(token, email)) {
+                return ResponseGenerator.response(false, "Invalid or expired token", 401);
+            }
+
+            User user = authService.getLoggedInUserProfile(email);
+            if(user == null) {
+                return ResponseGenerator.response(false, "User not found", 404);
+            }
+            UserDTO userDTO = new UserDTO(
+                    user.getId(),
+                    user.getFullName(),
+                    user.getEmail(),
+                    user.getProfileAvatar(),
+                    user.getType(),
+                    user.getRole(),
+                    null
+            );
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Retrieved logged in user successfully");
+            response.put("loggedInUser", userDTO);
+            return ResponseEntity.ok().body(response);
+
+        }catch(Exception e) {
+            return ResponseGenerator.response(false, "Failed to retrieve user: " + e.getMessage(), 500);
+        }
+
+    }
+
     @RequestMapping(value = "/logout", method = RequestMethod.POST)
-    public ResponseEntity<?> logoutUser() {
+    public ResponseEntity<?> logoutUser(HttpServletResponse httpServletResponse) {
         try {
             // Clearing the security context
             SecurityContextHolder.clearContext();
+
+            Cookie cookie = new Cookie("token", null);
+            cookie.setHttpOnly(true);
+            cookie.setSecure(true);
+            cookie.setPath("/");
+            cookie.setMaxAge(0);
+            httpServletResponse.addCookie(cookie);
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);

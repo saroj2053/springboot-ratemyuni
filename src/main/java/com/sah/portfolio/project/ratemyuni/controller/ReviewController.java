@@ -22,7 +22,7 @@ public class ReviewController {
     @Autowired
     private ReviewService reviewService;
 
-    @PostMapping("/")
+    @PostMapping()
     public ResponseEntity<?> addReview(@RequestBody ReviewRequest reviewRequest) {
         try {
             if (reviewRequest.getUniversityId() == null || reviewRequest.getUniversityId().isEmpty()) {
@@ -41,8 +41,12 @@ public class ReviewController {
                 return ResponseGenerator.response(false, "Rating must be between 1 and 5", 400);
             }
 
-            if (reviewRequest.getReviewText() == null || reviewRequest.getReviewText().isEmpty()) {
-                return ResponseGenerator.response(false, "Review text must be at least 50 characters", 400);
+            if (reviewRequest.getTitle() == null || reviewRequest.getTitle().isEmpty()) {
+                return ResponseGenerator.response(false, "Review title must be at least 20 characters", 400);
+            }
+
+            if (reviewRequest.getComment() == null || reviewRequest.getComment().isEmpty()) {
+                return ResponseGenerator.response(false, "Review comment must be at least 50 characters", 400);
             }
 
             Review review = reviewService.addReview(reviewRequest);
@@ -56,10 +60,16 @@ public class ReviewController {
 
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<?> deleteReview(@PathVariable("id") String reviewId) {
+
+        try {
         reviewService.deleteReview(reviewId);
+
         return ResponseEntity
                 .ok()
                 .body(ResponseGenerator.response(true, "Review deleted successfully", 200));
+        } catch(Exception e) {
+            return ResponseEntity.internalServerError().body("Error deleting review: " + e.getMessage());
+        }
     }
 
     @PatchMapping("/update/{id}")

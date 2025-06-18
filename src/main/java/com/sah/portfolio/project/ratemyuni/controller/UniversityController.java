@@ -1,20 +1,24 @@
 package com.sah.portfolio.project.ratemyuni.controller;
 
+import com.sah.portfolio.project.ratemyuni.model.GeocodeResult;
+import com.sah.portfolio.project.ratemyuni.model.Review;
 import com.sah.portfolio.project.ratemyuni.model.University;
+import com.sah.portfolio.project.ratemyuni.repository.ReviewRepository;
 import com.sah.portfolio.project.ratemyuni.service.CloudinaryService;
 import com.sah.portfolio.project.ratemyuni.service.UniversityService;
 import com.sah.portfolio.project.ratemyuni.utils.ResponseGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+
 
 @Slf4j
 @RestController
@@ -26,6 +30,15 @@ public class UniversityController {
 
     @Autowired
     private CloudinaryService cloudinaryService;
+
+    private final RestTemplate restTemplate;
+
+    public UniversityController() {
+        this.restTemplate = new RestTemplate();
+    }
+
+    @Autowired
+    private ReviewRepository reviewRepository;
 
     @GetMapping("/all")
     public ResponseEntity<?> getAllUniversities() {
@@ -80,14 +93,50 @@ public class UniversityController {
     @GetMapping("/{universityId}")
     public ResponseEntity<?> getUniversityById(@PathVariable String universityId) {
         try {
+            // 1. fetching university by ID
             University universityResponse = universityService.getUniversityDetails(universityId);
 
             if (universityResponse == null) {
-                return ResponseEntity.noContent().build();
+                return ResponseGenerator.response(false, "University not found", 404);
             }
 
+            // 2.fetching all the associated reviews
+            List<Review> reviews = reviewRepository.findAllById(universityResponse.getReviewIds() !=null ? universityResponse.getReviewIds() : List.of());
+
+            // 3. geocoding using OpenStreetMap
+            String address = universityResponse.getLocation();
+
+            String url = "https://nominatim.openstreetmap.org/search?format=json&q=" + address;
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("User-Agent", "RateMyUni-SpringBootApp");
+
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<GeocodeResult[]> geocodeResponse = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    GeocodeResult[].class
+            );
+
+            GeocodeResult[] results = geocodeResponse.getBody();
+
+            if (results == null || results.length == 0) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("success", false, "message", "No geocode found for " + address));
+            }
+
+            Map<String, Object> geocode = Map.of(
+                    "latitude", results[0].getLat(),
+                    "longitude", results[0].getLon()
+            );
+
+            // creating combined response DTO
             Map<String, Object> res = new HashMap<>();
             res.put("university", universityResponse);
+            res.put("reviews", reviews);
+            res.put("geocode", geocode);
             return ResponseEntity.status(200).body(res);
 
         } catch (Exception e) {

@@ -28,7 +28,10 @@ public class ReviewService {
         newReview.setUniversityId(req.getUniversityId());
         newReview.setUserId(req.getUserId());
         newReview.setRating(req.getRating());
-        newReview.setReviewText(req.getReviewText());
+        newReview.setTitle(req.getTitle());
+        newReview.setComment(req.getComment());
+        newReview.setProgram(req.getProgram());
+        newReview.setGraduationYear(req.getGraduationYear());
 
         Review savedReview = reviewRepository.save(newReview);
 
@@ -69,7 +72,10 @@ public class ReviewService {
                 .orElseThrow(() -> new RuntimeException("Review not found"));
 
         existingReview.setRating(request.getRating());
-        existingReview.setReviewText(request.getReviewText());
+        existingReview.setTitle(request.getTitle());
+        existingReview.setComment(request.getComment());
+        existingReview.setProgram(request.getProgram());
+        existingReview.setGraduationYear(request.getGraduationYear());
         return reviewRepository.save(existingReview);
     }
 }

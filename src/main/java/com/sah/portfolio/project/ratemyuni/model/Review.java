@@ -3,9 +3,12 @@ package com.sah.portfolio.project.ratemyuni.model;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
+
+import java.time.Instant;
 
 @Data
 @AllArgsConstructor
@@ -17,7 +20,19 @@ public class Review {
 
     private Double rating;
 
-    private String reviewText;
+    private String title;
+
+    private String comment;
+
+    private String program;
+
+    private String graduationYear;
+
+    @CreatedDate
+    private Instant createdAt;
+
+    @LastModifiedDate
+    private Instant updatedAt;
 
     private String userId;
 

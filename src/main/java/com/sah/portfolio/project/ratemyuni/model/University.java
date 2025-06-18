@@ -29,7 +29,7 @@ public class University {
     private Category type;
 
     public enum Category {
-        national, provincial, autonomous
+        Public, Private
     }
 
     private String description;

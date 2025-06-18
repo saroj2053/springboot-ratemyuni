@@ -5,5 +5,8 @@ import lombok.Data;
 @Data
 public class ReviewUpdateRequest {
     private Double rating;
-    private String reviewText;
+    private String title;
+    private String comment;
+    private String program;
+    private String graduationYear;
 }

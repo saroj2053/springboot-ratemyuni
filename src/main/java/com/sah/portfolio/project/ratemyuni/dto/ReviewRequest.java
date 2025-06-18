@@ -7,6 +7,9 @@ public class ReviewRequest {
     private String universityId;
     private String userId;
     private double rating;
-    private String reviewText;
+    private String title;
+    private String comment;
+    private String program;
+    private String graduationYear;
 
 }

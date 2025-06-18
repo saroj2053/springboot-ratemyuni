@@ -88,4 +88,8 @@ public class AuthService {
         }
 
     }
+
+    public User getLoggedInUserProfile(String email) {
+        return userRepository.findByEmail(email);
+    }
 }
