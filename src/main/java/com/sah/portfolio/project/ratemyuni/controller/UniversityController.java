@@ -101,36 +101,36 @@ public class UniversityController {
             }
 
             // 2.fetching all the associated reviews
-            List<Review> reviews = reviewRepository.findAllById(universityResponse.getReviewIds() !=null ? universityResponse.getReviewIds() : List.of());
+            List<Review> reviews = reviewRepository.findAllById(
+                    universityResponse.getReviewIds() != null ?
+                            universityResponse.getReviewIds() :
+                            List.of()
+            );
 
             // 3. geocoding using OpenStreetMap
+            Map<String, Object> geocode = null;
             String address = universityResponse.getLocation();
 
-            String url = "https://nominatim.openstreetmap.org/search?format=json&q=" + address;
+            if (!address.isEmpty()) {
+                String url = "https://nominatim.openstreetmap.org/search?format=json&q=" + address;
+                HttpHeaders headers = new HttpHeaders();
+                headers.set("User-Agent", "RateMyUni-SpringBootApp");
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("User-Agent", "RateMyUni-SpringBootApp");
+                HttpEntity<Void> entity = new HttpEntity<>(headers);
+                ResponseEntity<GeocodeResult[]> geocodeResponse = restTemplate.exchange(
+                        url,
+                        HttpMethod.GET,
+                        entity,
+                        GeocodeResult[].class
+                );
 
-            HttpEntity<Void> entity = new HttpEntity<>(headers);
+                GeocodeResult[] results = geocodeResponse.getBody();
 
-            ResponseEntity<GeocodeResult[]> geocodeResponse = restTemplate.exchange(
-                    url,
-                    HttpMethod.GET,
-                    entity,
-                    GeocodeResult[].class
-            );
-
-            GeocodeResult[] results = geocodeResponse.getBody();
-
-            if (results == null || results.length == 0) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(Map.of("success", false, "message", "No geocode found for " + address));
+                if (results != null && results.length > 0) {
+                    geocode = Map.of("latitude", results[0].getLat(),
+                            "longitude", results[0].getLon());
+                }
             }
-
-            Map<String, Object> geocode = Map.of(
-                    "latitude", results[0].getLat(),
-                    "longitude", results[0].getLon()
-            );
 
             // creating combined response DTO
             Map<String, Object> res = new HashMap<>();
