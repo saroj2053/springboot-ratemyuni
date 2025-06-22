@@ -40,7 +40,7 @@ public class AuthService {
         user.setPassword(hashedPassword);
 
         String queryParamsForAvatar = user.getFullName().replace(" ", "+");
-        String profileAvatar = "https://avatar.iran.liara.run/username?username=" + queryParamsForAvatar;
+        String profileAvatar = "https://ui-avatars.com/api/?uppercase=false&name=" + queryParamsForAvatar + "&background=0D8ABC&color=fff";
         user.setProfileAvatar(profileAvatar);
 
         log.info("User object before saving: {}", user);
