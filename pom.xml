@@ -97,6 +97,7 @@
 	</dependencies>
 
 	<build>
+		<finalName>nepal-uni-reviews</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

@@ -10,8 +10,11 @@ import org.springframework.data.mongodb.config.EnableMongoAuditing;
 public class RateMyUniApplication {
 
     public static void main(String[] args) {
+
         Dotenv dotenv = Dotenv.load();
         System.setProperty("MONGODB_URI", dotenv.get("MONGODB_URI"));
+        System.setProperty("FRONTEND_URL", dotenv.get("FRONTEND_URL"));
+
         SpringApplication.run(RateMyUniApplication.class, args);
     }
 
